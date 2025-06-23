@@ -1,63 +1,78 @@
-from flask import Flask, request, jsonify, render_template
-import csv
+from flask import Flask, request, jsonify, render_template, send_file
+import psycopg2
 import os
-from openpyxl import Workbook
-import traceback
+import io
+import csv
 
-# Create Flask app and specify template/static folders
-wsr_app = Flask(__name__, template_folder='templates', static_folder='static')
+app = Flask(__name__)
 
-# Local path to save CSV/Excel files (Render compatible)
-DATA_DIR = os.path.join(os.getcwd(), "data")
-os.makedirs(DATA_DIR, exist_ok=True)
+# Environment variable (Render provides it automatically if you add it)
+DATABASE_URL = os.getenv('DATABASE_URL')
 
-CSV_FILE = os.path.join(DATA_DIR, "WeeklyStatusReport.csv")
-EXCEL_FILE = os.path.join(DATA_DIR, "WeeklyStatusReport.xlsx")
+def get_connection():
+    return psycopg2.connect(DATABASE_URL)
 
-@wsr_app.route('/')
+@app.route('/')
 def index():
     return render_template('index.html')
 
-@wsr_app.route('/data', methods=['GET'])
+@app.route('/data', methods=['GET'])
 def load_data():
-    rows = []
     try:
-        if os.path.exists(CSV_FILE):
-            with open(CSV_FILE, newline='', encoding='utf-8') as f:
-                reader = csv.reader(f)
-                next(reader, None)  # Skip header
-                rows = [row for row in reader]
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT year, month, weekdays, etria, solutions FROM weekly_status")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        return jsonify(rows)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    return jsonify(rows)
 
-@wsr_app.route('/save', methods=['POST'])
+@app.route('/save', methods=['POST'])
 def save_data():
     data = request.json.get('tableData')
-    header = ["Year", "Month", "Week Days", "Etria", "Solutions"]
-
     try:
-        # Save CSV
-        with open(CSV_FILE, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
-            writer.writerow(header)
-            writer.writerows(data)
-
-        # Save Excel
-        wb = Workbook()
-        ws = wb.active
-        ws.append(header)
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM weekly_status")  # Clear previous data
         for row in data:
-            ws.append(row)
-        wb.save(EXCEL_FILE)
-
-        return jsonify({'message': 'Data saved successfully to CSV and Excel.'})
-
+            cur.execute(
+                "INSERT INTO weekly_status (year, month, weekdays, etria, solutions) VALUES (%s, %s, %s, %s, %s)",
+                row
+            )
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({'message': 'Data saved successfully to PostgreSQL'})
     except Exception as e:
-        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-if __name__ == '__main__':
-    wsr_app.run(host='0.0.0.0', port=8080, debug=True)
+@app.route('/download_csv')
+def download_csv():
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT year, month, weekdays, etria, solutions FROM weekly_status")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
 
-app = wsr_app
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["Year", "Month", "Week Days", "Etria", "Solutions"])
+        writer.writerows(rows)
+
+        output.seek(0)
+        return send_file(
+            io.BytesIO(output.getvalue().encode()),
+            mimetype="text/csv",
+            download_name="WeeklyStatusReport.csv",
+            as_attachment=True
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# For local testing:
+if __name__ == '__main__':
+    app.run(debug=True)
