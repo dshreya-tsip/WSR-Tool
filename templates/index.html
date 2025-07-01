@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>NW Team Weekly Status Report</title>
   <link rel="stylesheet" 
-  href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+    href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
   <style>
     body { background: #f8f9fa; }
     #loginForm {
@@ -35,13 +35,6 @@
     tr.editing td input, tr.editing td textarea, tr.editing td select {
       pointer-events: auto; background-color: white;
       border: 1px solid #ced4da; border-radius: 4px;
-    }
-    /* Date range picker styles */
-    .date-range-inputs input[type="date"] {
-      display: inline-block;
-      width: 115px;
-      margin: 0 2px;
-      vertical-align: middle;
     }
     .date-range-display {
       font-weight: bold;
@@ -119,7 +112,7 @@
         }
 
         document.querySelector("#wsrTable tbody").innerHTML = "";
-        loadTable();
+        // Do NOT call loadTable(); on login -- table starts empty
       } else {
         alert("Invalid username or password.");
       }
@@ -150,22 +143,16 @@
 
     function pad(n) { return n < 10 ? '0' + n : n; }
 
-    // Format date range as per requirements
+    // Format date range always as DD-DD/MM/YYYY
     function formatDateRange(start, end) {
       if (!start || !end) return "";
       const startDate = new Date(start);
       const endDate = new Date(end);
       if (isNaN(startDate) || isNaN(endDate)) return "";
+      if (endDate < startDate) return "";
 
-      // If same month and year: DD-DD/MM/YYYY
-      if (
-        startDate.getMonth() === endDate.getMonth() &&
-        startDate.getFullYear() === endDate.getFullYear()
-      ) {
-        return `${pad(startDate.getDate())}-${pad(endDate.getDate())}/${pad(startDate.getMonth() + 1)}/${startDate.getFullYear()}`;
-      }
-      // If different: DD/MM/YYYY - DD/MM/YYYY
-      return `${pad(startDate.getDate())}/${pad(startDate.getMonth() + 1)}/${startDate.getFullYear()} - ${pad(endDate.getDate())}/${pad(endDate.getMonth() + 1)}/${endDate.getFullYear()}`;
+      // Always show as DD-DD/MM/YYYY, using start and end dates
+      return `${pad(startDate.getDate())}-${pad(endDate.getDate())}/${pad(startDate.getMonth() + 1)}/${startDate.getFullYear()}`;
     }
 
     function addRow(data = [{start:"", end:""}, "", "", ""]) {
@@ -177,7 +164,7 @@
         const cell = row.insertCell();
 
         if (index === 0) {
-          // Start & End date picker
+          // Single calendar: Start/End date range
           cell.style.textAlign = "center";
           const rangeContainer = document.createElement("div");
           rangeContainer.className = "date-range-inputs";
@@ -198,6 +185,8 @@
           endInput.style.width = "120px";
           endInput.value = data[0]?.end || "";
 
+          // Don't load any row with preset data unless explicitly given (so default is empty)
+
           // Formatted output
           const rangeDiv = document.createElement("div");
           rangeDiv.className = "date-range-display";
@@ -205,7 +194,16 @@
 
           // Update display on change
           function updateRange() {
-            rangeDiv.textContent = formatDateRange(startInput.value, endInput.value);
+            // Enforce end >= start
+            if (startInput.value && endInput.value) {
+              if (endInput.value < startInput.value) {
+                rangeDiv.textContent = "End date must be after start date";
+                return;
+              }
+              rangeDiv.textContent = formatDateRange(startInput.value, endInput.value);
+            } else {
+              rangeDiv.textContent = "";
+            }
           }
           startInput.onchange = updateRange;
           endInput.onchange = updateRange;
@@ -322,17 +320,8 @@
       alert("Data saved successfully.");
     }
 
-    function loadTable() {
-      const data = localStorage.getItem("wsrData");
-      if (!data) return;
-      const rowsData = JSON.parse(data);
-      document.querySelector("#wsrTable tbody").innerHTML = "";
-      rowsData.forEach(rowData => addRow(rowData));
-      editingRow = null;
-      disableAllInputs();
-    }
-
-    window.onload = () => { /* Don't load table on page load, only on login */ };
+    // No auto-load at startup
+    window.onload = () => {};
   </script>
 </body>
 </html>
