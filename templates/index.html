@@ -36,20 +36,17 @@
       pointer-events: auto; background-color: white;
       border: 1px solid #ced4da; border-radius: 4px;
     }
-    /* Date multi-picker styles */
-    .date-badge {
+    /* Date range picker styles */
+    .date-range-inputs input[type="date"] {
       display: inline-block;
-      background: #e6f2ff;
-      color: #0066a1;
-      border-radius: 8px;
-      padding: 2px 8px;
-      margin: 2px;
-      font-size: 13px;
+      width: 115px;
+      margin: 0 2px;
+      vertical-align: middle;
     }
-    .date-badge .remove {
-      cursor: pointer;
-      margin-left: 4px;
-      color: #d9534f;
+    .date-range-display {
+      font-weight: bold;
+      margin-top: 5px;
+      min-height: 22px;
     }
   </style>
 </head>
@@ -122,6 +119,7 @@
         }
 
         document.querySelector("#wsrTable tbody").innerHTML = "";
+        loadTable();
       } else {
         alert("Invalid username or password.");
       }
@@ -150,14 +148,27 @@
       textarea.style.height = textarea.scrollHeight + "px";
     }
 
-    // Util: format date yyyy-mm-dd to dd MMM yyyy
-    function formatDate(dateString) {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return "";
-      return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    function pad(n) { return n < 10 ? '0' + n : n; }
+
+    // Format date range as per requirements
+    function formatDateRange(start, end) {
+      if (!start || !end) return "";
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+      if (isNaN(startDate) || isNaN(endDate)) return "";
+
+      // If same month and year: DD-DD/MM/YYYY
+      if (
+        startDate.getMonth() === endDate.getMonth() &&
+        startDate.getFullYear() === endDate.getFullYear()
+      ) {
+        return `${pad(startDate.getDate())}-${pad(endDate.getDate())}/${pad(startDate.getMonth() + 1)}/${startDate.getFullYear()}`;
+      }
+      // If different: DD/MM/YYYY - DD/MM/YYYY
+      return `${pad(startDate.getDate())}/${pad(startDate.getMonth() + 1)}/${startDate.getFullYear()} - ${pad(endDate.getDate())}/${pad(endDate.getMonth() + 1)}/${endDate.getFullYear()}`;
     }
 
-    function addRow(data = [[], "", "", ""]) {
+    function addRow(data = [{start:"", end:""}, "", "", ""]) {
       const tbody = document.querySelector("#wsrTable tbody");
       const row = tbody.insertRow();
       const colsCount = currentRole === "admin" ? 5 : 4;
@@ -166,81 +177,43 @@
         const cell = row.insertCell();
 
         if (index === 0) {
-          // Week Days: Multi-date picker
+          // Start & End date picker
           cell.style.textAlign = "center";
-          // Container for badges
-          const badgesDiv = document.createElement("div");
-          badgesDiv.className = "badges-container";
-          cell.appendChild(badgesDiv);
+          const rangeContainer = document.createElement("div");
+          rangeContainer.className = "date-range-inputs";
 
-          // Hidden input to store dates (array)
-          const hiddenInput = document.createElement("input");
-          hiddenInput.type = "hidden";
-          hiddenInput.value = JSON.stringify(data[0] || []);
-          cell.appendChild(hiddenInput);
+          // Start Date
+          const startInput = document.createElement("input");
+          startInput.type = "date";
+          startInput.className = "form-control mb-1";
+          startInput.style.display = "inline-block";
+          startInput.style.width = "120px";
+          startInput.value = data[0]?.start || "";
 
-          // Date picker
-          const dateInput = document.createElement("input");
-          dateInput.type = "date";
-          dateInput.style.marginTop = "8px";
-          dateInput.style.display = "none";
-          cell.appendChild(dateInput);
+          // End Date
+          const endInput = document.createElement("input");
+          endInput.type = "date";
+          endInput.className = "form-control mb-1";
+          endInput.style.display = "inline-block";
+          endInput.style.width = "120px";
+          endInput.value = data[0]?.end || "";
 
-          // Add Date button
-          const addDateBtn = document.createElement("button");
-          addDateBtn.textContent = "Add Date";
-          addDateBtn.type = "button";
-          addDateBtn.className = "btn btn-outline-primary btn-sm";
-          addDateBtn.style.marginTop = "8px";
-          addDateBtn.onclick = function() {
-            dateInput.style.display = "inline-block";
-            dateInput.focus();
-          };
-          cell.appendChild(addDateBtn);
+          // Formatted output
+          const rangeDiv = document.createElement("div");
+          rangeDiv.className = "date-range-display";
+          rangeDiv.textContent = formatDateRange(startInput.value, endInput.value);
 
-          // Render badges
-          function renderBadges() {
-            badgesDiv.innerHTML = "";
-            const dates = JSON.parse(hiddenInput.value || "[]");
-            dates.forEach((d, i) => {
-              const badge = document.createElement("span");
-              badge.className = "date-badge";
-              badge.textContent = formatDate(d);
-              const remove = document.createElement("span");
-              remove.className = "remove";
-              remove.textContent = "×";
-              remove.title = "Remove";
-              remove.onclick = function () {
-                const arr = JSON.parse(hiddenInput.value || "[]");
-                arr.splice(i, 1);
-                hiddenInput.value = JSON.stringify(arr);
-                renderBadges();
-              };
-              badge.appendChild(remove);
-              badgesDiv.appendChild(badge);
-            });
+          // Update display on change
+          function updateRange() {
+            rangeDiv.textContent = formatDateRange(startInput.value, endInput.value);
           }
-          renderBadges();
+          startInput.onchange = updateRange;
+          endInput.onchange = updateRange;
 
-          dateInput.onchange = function() {
-            let arr = JSON.parse(hiddenInput.value || "[]");
-            if (arr.length >= 5) {
-              alert("You can select a maximum of 5 dates.");
-              dateInput.value = "";
-              dateInput.style.display = "none";
-              return;
-            }
-            if (arr.includes(dateInput.value)) {
-              alert("This date is already selected.");
-            } else if (dateInput.value) {
-              arr.push(dateInput.value);
-              hiddenInput.value = JSON.stringify(arr);
-              renderBadges();
-            }
-            dateInput.value = "";
-            dateInput.style.display = "none";
-          };
-
+          rangeContainer.appendChild(startInput);
+          rangeContainer.appendChild(endInput);
+          cell.appendChild(rangeContainer);
+          cell.appendChild(rangeDiv);
         } else if (index === 1 || index === 2 || index === 3) {
           // Textareas for Etria, Solutions, Meeting Summary
           const textarea = document.createElement("textarea");
@@ -290,7 +263,6 @@
     function setInputsDisabled(row, disabled) {
       const inputs = row.querySelectorAll("input, select, textarea, button");
       inputs.forEach(input => {
-        // Only disable input, textarea, select; keep the "Remove" span and badges clickable.
         if (input.tagName === "INPUT" || input.tagName === "TEXTAREA" || input.tagName === "SELECT") {
           input.disabled = disabled;
           if (disabled) {
@@ -304,18 +276,9 @@
             input.style.borderRadius = "4px";
           }
         } else if (input.tagName === "BUTTON") {
-          // Only enable Add Date button and Edit/Delete if not disabled
           input.disabled = disabled;
-          if (input.textContent === "Add Date") {
-            input.style.display = disabled ? "none" : "inline-block";
-          }
         }
       });
-      // Also hide/show the date input
-      const dateInput = row.querySelector('input[type="date"]');
-      if (dateInput) {
-        dateInput.style.display = disabled ? "none" : "none";
-      }
     }
 
     function toggleEditRow(row, editBtn) {
@@ -344,9 +307,10 @@
       for (let i = 0; i < rows.length; i++) {
         let rowData = [];
         const cells = rows[i].cells;
-        // Week Days column (multi-date)
-        const hiddenInput = cells[0].querySelector('input[type="hidden"]');
-        rowData.push(JSON.parse(hiddenInput.value || "[]"));
+        // Week Days column (date range)
+        const startInput = cells[0].querySelector('input[type="date"]:first-of-type');
+        const endInput = cells[0].querySelector('input[type="date"]:last-of-type');
+        rowData.push({ start: startInput.value, end: endInput.value });
         // Textareas
         for (let j = 1; j <= 3; j++) {
           const textarea = cells[j].querySelector("textarea");
@@ -362,12 +326,13 @@
       const data = localStorage.getItem("wsrData");
       if (!data) return;
       const rowsData = JSON.parse(data);
+      document.querySelector("#wsrTable tbody").innerHTML = "";
       rowsData.forEach(rowData => addRow(rowData));
       editingRow = null;
       disableAllInputs();
     }
 
-    window.onload = () => { loadTable(); };
+    window.onload = () => { /* Don't load table on page load, only on login */ };
   </script>
 </body>
 </html>
