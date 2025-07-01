@@ -2,168 +2,521 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Weekly Status Report</title>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
-
-
+  <title>NW Team Weekly Status Report</title>
+  <link rel="stylesheet" 
+href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
   <style>
-    td input,
-    td textarea,
-    td select {
+    body {
+      background: #f8f9fa;
+    }
+ 
+    #loginForm {
+      max-width: 400px;
+      margin: 100px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+ 
+    #wsrTable td input,
+    #wsrTable td textarea,
+    #wsrTable td select {
       width: 100%;
       box-sizing: border-box;
       font-size: 14px;
       font-family: inherit;
+      border: none;
+      background-color: transparent;
+      resize: none;
+      pointer-events: none; /* disable editing by default */
     }
-
-    td textarea {
+ 
+    #wsrTable td textarea {
       min-height: 60px;
-      resize: none; /* Disable manual resizing */
-      overflow: hidden; /* Hide scrollbars */
+      overflow: hidden;
     }
-
-    th:nth-child(4),
-    td:nth-child(4),
-    th:nth-child(5),
-    td:nth-child(5) {
-      min-width: 250px;
+ 
+    #wsrTable td:nth-child(4),
+    #wsrTable td:nth-child(5),
+    #wsrTable td:nth-child(6),
+    #wsrTable th:nth-child(4),
+    #wsrTable th:nth-child(5),
+    #wsrTable th:nth-child(6) {
+      min-width: 260px;
     }
-
-    /* Bigger, centered table headers */
+ 
+    /* Week Days column width and center */
+    #wsrTable td:nth-child(3),
+    #wsrTable th:nth-child(3) {
+      width: 120px;
+      text-align: center;
+      vertical-align: middle;
+    }
+ 
+    .custom-header th {
+      background-color: #343a40; /* Dell Blue */
+      color: white;
+      text-align: center;
+      vertical-align: middle;
+    }
+ 
+    .custom-save-btn {
+      background-color: #12d536; /* Dell Blue */
+      color: white;
+      border: none;
+    }
+ 
+    .custom-save-btn:hover {
+      background-color: #12d536; /* Slightly darker for hover effect */
+    }
+ 
+    .custom-add-btn {
+      background-color: #0066a1;
+      color: white;
+      border: none;
+    }
+ 
+    .custom-add-btn:hover {
+      background-color: #0066a1; /* Slightly darker on hover */
+    }
+ 
+    /* Center Year and Month when merged */
+    #wsrTable td:nth-child(1),
+    #wsrTable td:nth-child(2),
+    #wsrTable th:nth-child(1),
+    #wsrTable th:nth-child(2) {
+      text-align: center;
+      vertical-align: middle;
+      padding: 12px 8px;
+      min-width: 80px; /* Increased from 70px to 90px */
+    }
+ 
     #wsrTable thead th {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: bold;
       text-align: center;
       vertical-align: middle;
     }
-  </style>
-</head>
-<body class="p-4">
-  <h2 class="text-center mb-4">Weekly Status Report</h2>
-
-  <table id="wsrTable" class="table table-bordered">
-    <thead class="thead-dark">
-      <tr>
-        <th>Year</th>
-        <th>Month</th>
-        <th>Week Days</th>
-        <th>Etria</th>
-        <th>Solutions</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <button class="btn btn-success" onclick="addRow()">Add Row</button>
-  <button class="btn btn-primary" onclick="saveTable()">Save</button>
-  <a href="/download_csv" class="btn btn-info">Download CSV</a>
-
-
-  <script>
-    function autoResize(textarea) {
-      textarea.style.height = "auto"; // Reset height
-      textarea.style.height = textarea.scrollHeight + "px"; // Adjust height to content
+ 
+    #mainApp {
+      padding: 20px;
+    }
+ 
+    /* Updated styles for centered heading and logout */
+    #logoutBtn {
+      position: absolute;
+      top: 0;
+      right: 0;
     }
 
-    function addRow(data = ["", "", "", "", ""]) {
-      const table = document.getElementById("wsrTable").getElementsByTagName("tbody")[0];
-      const row = table.insertRow();
+    /* Actions cell buttons centered */
+    td.actions-cell {
+      text-align: center;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
 
-      data.forEach((val, index) => {
+    td.actions-cell button {
+      margin: 0 5px;
+      min-width: 60px;
+    }
+
+    /* Editable inputs: enable pointer events and show border */
+    tr.editing td input,
+    tr.editing td textarea,
+    tr.editing td select {
+      pointer-events: auto;
+      background-color: white;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+ 
+  <!-- Login Form -->
+  <div id="loginForm">
+    <h3 class="text-center mb-4">Login to NW Team WSR</h3>
+    <div class="form-group">
+      <label for="username">Username</label>
+      <input type="text" id="username" class="form-control" />
+    </div>
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" class="form-control" />
+    </div>
+    <button class="btn btn-primary btn-block" onclick="handleLogin()">Login</button>
+  </div>
+ 
+  <!-- Main Application -->
+  <div id="mainApp" style="display: none; position: relative;">
+ 
+    <div class="text-center mb-3" style="position: relative;">
+      <h2 class="mb-0">NW Weekly Status Report</h2>
+      <button id="logoutBtn" class="btn btn-outline-danger" onclick="handleLogout()">Logout</button>
+    </div>
+ 
+    <table id="wsrTable" class="table table-bordered">
+      <thead class="custom-header">
+        <tr id="tableHeaderRow">
+          <th>Year</th>
+          <th>Month</th>
+          <th>Week Days</th>
+          <th>Etria(Activity)</th>
+          <th>Solutions(Activity)</th>
+          <th>Meeting Summary</th>
+          <!-- Actions header only if admin -->
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+ 
+    <button class="btn custom-add-btn" id="addRowBtn" onclick="addRow()">Add Row</button>
+    <button class="btn custom-save-btn" id="saveBtn" onclick="saveTable()">Save</button>
+ 
+  </div>
+ 
+  <script>
+    let currentRole = "";
+    let editingRow = null; // track the currently editing row
+ 
+    function handleLogin() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+ 
+      if ((username === "admin" && password === "admin123") ||
+          (username === "user" && password === "user123")) {
+ 
+        currentRole = username === "admin" ? "admin" : "user";
+        document.getElementById("loginForm").style.display = "none";
+        document.getElementById("mainApp").style.display = "block";
+ 
+        const headerRow = document.getElementById("tableHeaderRow");
+        if (currentRole === "user") {
+          document.getElementById("addRowBtn").style.display = "none";
+          document.getElementById("saveBtn").style.display = "none";
+          if (headerRow.children.length === 7) {
+            headerRow.removeChild(headerRow.lastElementChild);
+          }
+        } else {
+          document.getElementById("addRowBtn").style.display = "inline-block";
+          document.getElementById("saveBtn").style.display = "inline-block";
+          if (headerRow.children.length === 6) {
+            const th = document.createElement("th");
+            th.textContent = "Actions";
+            headerRow.appendChild(th);
+          }
+        }
+ 
+        // Start with empty table
+        document.querySelector("#wsrTable tbody").innerHTML = "";
+      } else {
+        alert("Invalid username or password.");
+      }
+    }
+ 
+    function handleLogout() {
+      currentRole = "";
+      editingRow = null;
+      document.getElementById("mainApp").style.display = "none";
+      document.getElementById("loginForm").style.display = "block";
+      document.querySelector("#wsrTable tbody").innerHTML = "";
+ 
+      document.getElementById("addRowBtn").style.display = "inline-block";
+      document.getElementById("saveBtn").style.display = "inline-block";
+ 
+      const headerRow = document.getElementById("tableHeaderRow");
+      if (headerRow.children.length === 6) {
+        const th = document.createElement("th");
+        th.textContent = "Actions";
+        headerRow.appendChild(th);
+      }
+ 
+      document.getElementById("username").value = "";
+      document.getElementById("password").value = "";
+    }
+ 
+    function autoResize(textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = textarea.scrollHeight + "px";
+    }
+ 
+    function addRow(data = ["", "", "", "", "", ""]) {
+      const tbody = document.querySelector("#wsrTable tbody");
+      const row = tbody.insertRow();
+ 
+      const colsCount = currentRole === "admin" ? 7 : 6;
+ 
+      for (let index = 0; index < colsCount; index++) {
         const cell = row.insertCell();
-
+ 
         if (index === 0) {
-          // Year dropdown (2020-2027)
+          // Year select
           const select = document.createElement("select");
-          for (let year = 2020; year <= 2027; year++) {
+          for (let year = 2025; year <= 2035; year++) {
             const option = document.createElement("option");
             option.value = year;
             option.textContent = year;
-            if (val == year.toString()) option.selected = true;
+            if (data[0] == year.toString()) option.selected = true;
             select.appendChild(option);
           }
           cell.appendChild(select);
-
         } else if (index === 1) {
-          // Month dropdown (Jan - Dec)
-          const months = [
-            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-          ];
+          // Month select
+          const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
           const select = document.createElement("select");
-          months.forEach((month) => {
+          months.forEach(month => {
             const option = document.createElement("option");
             option.value = month;
             option.textContent = month;
-            if (val === month) option.selected = true;
+            if (data[1] === month) option.selected = true;
             select.appendChild(option);
           });
           cell.appendChild(select);
-
-        } else if (index === 3 || index === 4) {
+        } else if (index === 2) {
+          // Week Days input centered
+          const input = document.createElement("input");
+          input.type = "text";
+          input.value = data[2] || "";
+          input.style.textAlign = "center";
+          cell.appendChild(input);
+        } else if (index === 3 || index === 4 || index === 5) {
+          // Textareas for Etria, Solutions, Meeting Summary
           const textarea = document.createElement("textarea");
-          textarea.value = val;
+          textarea.value = data[index] || "";
           textarea.oninput = function () {
             autoResize(this);
           };
-          setTimeout(() => autoResize(textarea), 0); // Auto-expand after inserting
+          setTimeout(() => autoResize(textarea), 0);
           cell.appendChild(textarea);
-
-        } else {
-          // Other inputs as text fields
-          const input = document.createElement("input");
-          input.type = "text";
-          input.value = val;
-          cell.appendChild(input);
+        } else if (index === 6 && currentRole === "admin") {
+          // Actions cell with Edit and Delete buttons centered
+          cell.classList.add("actions-cell");
+ 
+          const editBtn = document.createElement("button");
+          editBtn.textContent = "Edit";
+          editBtn.className = "btn btn-success btn-sm";
+          editBtn.onclick = () => toggleEditRow(row, editBtn);
+ 
+          const delBtn = document.createElement("button");
+          delBtn.textContent = "Delete";
+          delBtn.className = "btn btn-danger btn-sm";
+          delBtn.onclick = () => {
+            if (editingRow === row) editingRow = null; // reset editing if deleting editing row
+            row.remove();
+            mergeYearMonthCells();
+          };
+ 
+          cell.appendChild(editBtn);
+          cell.appendChild(delBtn);
         }
-      });
+      }
 
-      const deleteCell = row.insertCell();
-      const delBtn = document.createElement("button");
-      delBtn.textContent = "Delete";
-      delBtn.className = "btn btn-danger btn-sm";
-      delBtn.onclick = () => row.remove();
-      deleteCell.appendChild(delBtn);
+      // Set this new row as the editing row
+      editingRow = row;
+
+      // Enable inputs on the editing row, disable others
+      disableAllInputs();
+
+      // After adding a row, remove any merged rowspan styling because we're editing
+      unmergeYearMonthCells();
     }
 
-    function saveTable() {
+    // Disable inputs for all rows except editingRow
+    function disableAllInputs() {
       const rows = document.querySelectorAll("#wsrTable tbody tr");
-      const data = [];
-
-      rows.forEach((row) => {
-        const inputs = row.querySelectorAll("input, textarea, select");
-        const rowData = Array.from(inputs).map((input) => input.value.trim());
-        if (rowData.some((val) => val !== "")) {
-          data.push(rowData);
+      rows.forEach(row => {
+        if (row === editingRow) {
+          row.classList.add("editing");
+          setInputsDisabled(row, false);
+        } else {
+          row.classList.remove("editing");
+          setInputsDisabled(row, true);
         }
       });
+    }
 
-      fetch("/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tableData: data }),
-      })
-        .then((res) => res.json())
-        .then((resp) => alert(resp.message || resp.error))
-        .catch((err) => alert("Save failed: " + err));
+    // Enable or disable all inputs/selects/textareas in a row
+    function setInputsDisabled(row, disabled) {
+      const inputs = row.querySelectorAll("input, select, textarea");
+      inputs.forEach(input => {
+        input.disabled = disabled;
+        // Also toggle pointer-events for styling to keep consistent
+        if (disabled) {
+          input.style.pointerEvents = "none";
+          input.style.backgroundColor = "transparent";
+          input.style.border = "none";
+        } else {
+          input.style.pointerEvents = "auto";
+          input.style.backgroundColor = "white";
+          input.style.border = "1px solid #ced4da";
+          input.style.borderRadius = "4px";
+        }
+      });
+    }
+
+    // Toggle edit mode on a specific row when Edit button clicked
+    function toggleEditRow(row, editBtn) {
+      if (editingRow && editingRow !== row) {
+        // Disable previous editing row
+        disableAllInputs();
+        editingRow = null;
+      }
+
+      if (editingRow === row) {
+        // Clicking edit again on same row does nothing
+        return;
+      } else {
+        // Start editing this row
+        editingRow = row;
+        disableAllInputs();
+        // Keep button text always "Edit"
+        editBtn.textContent = "Edit";
+
+        // When editing any row, unmerge Year and Month cells so selects are accessible
+        unmergeYearMonthCells();
+      }
+    }
+ 
+    function saveTable() {
+      if (!confirm("Are you sure you want to save the changes?")) return;
+
+      // Stop editing first
+      editingRow = null;
+      disableAllInputs();
+
+      const tbody = document.querySelector("#wsrTable tbody");
+      const rows = tbody.rows;
+      let dataToSave = [];
+      for (let i = 0; i < rows.length; i++) {
+        let rowData = [];
+        const cells = rows[i].cells;
+        for (let j = 0; j < cells.length; j++) {
+          if (j === 6 && currentRole === "admin") {
+            // Skip Actions column
+            continue;
+          }
+          const cell = cells[j];
+          let value = "";
+          if (j === 0 || j === 1) {
+            // Selects for Year and Month
+            const select = cell.querySelector("select");
+            value = select ? select.value : cell.textContent.trim();
+          } else if (j === 2) {
+            const input = cell.querySelector("input");
+            value = input ? input.value.trim() : cell.textContent.trim();
+          } else {
+            // Textareas for rest
+            const textarea = cell.querySelector("textarea");
+            value = textarea ? textarea.value.trim() : cell.textContent.trim();
+          }
+          rowData.push(value);
+        }
+        dataToSave.push(rowData);
+      }
+
+      // Save to localStorage
+      localStorage.setItem("wsrData", JSON.stringify(dataToSave));
+      alert("Data saved successfully.");
+
+      // After saving, merge Year and Month cells
+      mergeYearMonthCells();
     }
 
     function loadTable() {
-      fetch("/data")
-        .then((res) => res.json())
-        .then((data) => {
-          const tableBody = document.querySelector("#wsrTable tbody");
-          tableBody.innerHTML = "";
-          data.forEach((row) => addRow(row));
-        })
-        .catch((err) => {
-          alert("Failed to load data: " + err);
-          addRow(); // Add one empty row on failure
-        });
+      const data = localStorage.getItem("wsrData");
+      if (!data) return;
+
+      const rowsData = JSON.parse(data);
+      rowsData.forEach(rowData => addRow(rowData));
+      mergeYearMonthCells();
+      editingRow = null;
+      disableAllInputs();
     }
 
-    window.onload = loadTable;
+    // Remove all rowspan and show Year and Month cells before editing
+    function unmergeYearMonthCells() {
+      const tbody = document.querySelector("#wsrTable tbody");
+      if (!tbody) return;
+
+      Array.from(tbody.rows).forEach(row => {
+        const yearCell = row.cells[0];
+        const monthCell = row.cells[1];
+        yearCell.rowSpan = 1;
+        monthCell.rowSpan = 1;
+        yearCell.style.display = "";
+        monthCell.style.display = "";
+        yearCell.style.textAlign = "center";
+        monthCell.style.textAlign = "center";
+      });
+    }
+
+    // Merge cells for Year and Month when values are same for consecutive rows
+    function mergeYearMonthCells() {
+      const tbody = document.querySelector("#wsrTable tbody");
+      if (!tbody) return;
+
+      function getCellValue(cell) {
+        const select = cell.querySelector("select");
+        if (select) return select.value;
+        return cell.textContent.trim();
+      }
+
+      // Reset all first: rowspan 1 and visible + centered text
+      Array.from(tbody.rows).forEach(row => {
+        const yearCell = row.cells[0];
+        const monthCell = row.cells[1];
+        yearCell.rowSpan = 1;
+        monthCell.rowSpan = 1;
+        yearCell.style.display = "";
+        monthCell.style.display = "";
+        yearCell.style.textAlign = "center";
+        monthCell.style.textAlign = "center";
+      });
+
+      let startRow = 0;
+      while (startRow < tbody.rows.length) {
+        const startYear = getCellValue(tbody.rows[startRow].cells[0]);
+        const startMonth = getCellValue(tbody.rows[startRow].cells[1]);
+        let endRow = startRow + 1;
+
+        // Find all consecutive rows with same Year AND Month
+        while (
+          endRow < tbody.rows.length &&
+          getCellValue(tbody.rows[endRow].cells[0]) === startYear &&
+          getCellValue(tbody.rows[endRow].cells[1]) === startMonth
+        ) {
+          endRow++;
+        }
+
+        const spanCount = endRow - startRow;
+
+        if (spanCount > 1) {
+          // Merge Year cells
+          tbody.rows[startRow].cells[0].rowSpan = spanCount;
+          for (let r = startRow + 1; r < endRow; r++) {
+            tbody.rows[r].cells[0].style.display = "none";
+          }
+
+          // Merge Month cells
+          tbody.rows[startRow].cells[1].rowSpan = spanCount;
+          for (let r = startRow + 1; r < endRow; r++) {
+            tbody.rows[r].cells[1].style.display = "none";
+          }
+        }
+
+        startRow = endRow;
+      }
+    }
+
+
+ 
+    // Load saved data on page load
+    window.onload = () => {
+      loadTable();
+    };
   </script>
 </body>
 </html>
