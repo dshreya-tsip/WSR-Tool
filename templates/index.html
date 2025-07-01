@@ -4,137 +4,56 @@
   <meta charset="UTF-8" />
   <title>NW Team Weekly Status Report</title>
   <link rel="stylesheet" 
-href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+  href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
   <style>
-    body {
-      background: #f8f9fa;
-    }
- 
+    body { background: #f8f9fa; }
     #loginForm {
-      max-width: 400px;
-      margin: 100px auto;
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
+      max-width: 400px; margin: 100px auto; background: white;
+      padding: 30px; border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
- 
-    #wsrTable td input,
-    #wsrTable td textarea,
-    #wsrTable td select {
-      width: 100%;
-      box-sizing: border-box;
-      font-size: 14px;
-      font-family: inherit;
-      border: none;
-      background-color: transparent;
-      resize: none;
-      pointer-events: none; /* disable editing by default */
+    #wsrTable td input, #wsrTable td textarea, #wsrTable td select {
+      width: 100%; box-sizing: border-box; font-size: 14px;
+      font-family: inherit; border: none;
+      background-color: transparent; resize: none; pointer-events: none;
     }
- 
-    #wsrTable td textarea {
-      min-height: 60px;
-      overflow: hidden;
+    #wsrTable td textarea { min-height: 60px; overflow: hidden; }
+    #wsrTable td:nth-child(1), #wsrTable th:nth-child(1) {
+      width: 260px; text-align: center; vertical-align: middle;
     }
- 
-    #wsrTable td:nth-child(4),
-    #wsrTable td:nth-child(5),
-    #wsrTable td:nth-child(6),
-    #wsrTable th:nth-child(4),
-    #wsrTable th:nth-child(5),
-    #wsrTable th:nth-child(6) {
-      min-width: 260px;
-    }
- 
-    /* Week Days column width and center */
-    #wsrTable td:nth-child(3),
-    #wsrTable th:nth-child(3) {
-      width: 120px;
-      text-align: center;
-      vertical-align: middle;
-    }
- 
     .custom-header th {
-      background-color: #343a40; /* Dell Blue */
-      color: white;
-      text-align: center;
-      vertical-align: middle;
+      background-color: #343a40; color: white; text-align: center; vertical-align: middle;
     }
- 
-    .custom-save-btn {
-      background-color: #12d536; /* Dell Blue */
-      color: white;
-      border: none;
+    .custom-save-btn { background-color: #12d536; color: white; border: none; }
+    .custom-save-btn:hover { background-color: #12d536; }
+    .custom-add-btn { background-color: #0066a1; color: white; border: none; }
+    .custom-add-btn:hover { background-color: #0066a1; }
+    #mainApp { padding: 20px; }
+    #logoutBtn { position: absolute; top: 0; right: 0; }
+    td.actions-cell { text-align: center; vertical-align: middle; white-space: nowrap; }
+    td.actions-cell button { margin: 0 5px; min-width: 60px; }
+    tr.editing td input, tr.editing td textarea, tr.editing td select {
+      pointer-events: auto; background-color: white;
+      border: 1px solid #ced4da; border-radius: 4px;
     }
- 
-    .custom-save-btn:hover {
-      background-color: #12d536; /* Slightly darker for hover effect */
+    /* Date multi-picker styles */
+    .date-badge {
+      display: inline-block;
+      background: #e6f2ff;
+      color: #0066a1;
+      border-radius: 8px;
+      padding: 2px 8px;
+      margin: 2px;
+      font-size: 13px;
     }
- 
-    .custom-add-btn {
-      background-color: #0066a1;
-      color: white;
-      border: none;
-    }
- 
-    .custom-add-btn:hover {
-      background-color: #0066a1; /* Slightly darker on hover */
-    }
- 
-    /* Center Year and Month when merged */
-    #wsrTable td:nth-child(1),
-    #wsrTable td:nth-child(2),
-    #wsrTable th:nth-child(1),
-    #wsrTable th:nth-child(2) {
-      text-align: center;
-      vertical-align: middle;
-      padding: 12px 8px;
-      min-width: 80px; /* Increased from 70px to 90px */
-    }
- 
-    #wsrTable thead th {
-      font-size: 22px;
-      font-weight: bold;
-      text-align: center;
-      vertical-align: middle;
-    }
- 
-    #mainApp {
-      padding: 20px;
-    }
- 
-    /* Updated styles for centered heading and logout */
-    #logoutBtn {
-      position: absolute;
-      top: 0;
-      right: 0;
-    }
-
-    /* Actions cell buttons centered */
-    td.actions-cell {
-      text-align: center;
-      vertical-align: middle;
-      white-space: nowrap;
-    }
-
-    td.actions-cell button {
-      margin: 0 5px;
-      min-width: 60px;
-    }
-
-    /* Editable inputs: enable pointer events and show border */
-    tr.editing td input,
-    tr.editing td textarea,
-    tr.editing td select {
-      pointer-events: auto;
-      background-color: white;
-      border: 1px solid #ced4da;
-      border-radius: 4px;
+    .date-badge .remove {
+      cursor: pointer;
+      margin-left: 4px;
+      color: #d9534f;
     }
   </style>
 </head>
 <body>
- 
   <!-- Login Form -->
   <div id="loginForm">
     <h3 class="text-center mb-4">Login to NW Team WSR</h3>
@@ -148,20 +67,16 @@ href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" 
     </div>
     <button class="btn btn-primary btn-block" onclick="handleLogin()">Login</button>
   </div>
- 
+
   <!-- Main Application -->
   <div id="mainApp" style="display: none; position: relative;">
- 
     <div class="text-center mb-3" style="position: relative;">
       <h2 class="mb-0">NW Weekly Status Report</h2>
       <button id="logoutBtn" class="btn btn-outline-danger" onclick="handleLogout()">Logout</button>
     </div>
- 
     <table id="wsrTable" class="table table-bordered">
       <thead class="custom-header">
         <tr id="tableHeaderRow">
-          <th>Year</th>
-          <th>Month</th>
           <th>Week Days</th>
           <th>Etria(Activity)</th>
           <th>Solutions(Activity)</th>
@@ -171,160 +86,194 @@ href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" 
       </thead>
       <tbody></tbody>
     </table>
- 
     <button class="btn custom-add-btn" id="addRowBtn" onclick="addRow()">Add Row</button>
     <button class="btn custom-save-btn" id="saveBtn" onclick="saveTable()">Save</button>
- 
   </div>
- 
   <script>
     let currentRole = "";
-    let editingRow = null; // track the currently editing row
- 
+    let editingRow = null;
+
     function handleLogin() {
       const username = document.getElementById("username").value.trim();
       const password = document.getElementById("password").value.trim();
- 
+
       if ((username === "admin" && password === "admin123") ||
           (username === "user" && password === "user123")) {
- 
+
         currentRole = username === "admin" ? "admin" : "user";
         document.getElementById("loginForm").style.display = "none";
         document.getElementById("mainApp").style.display = "block";
- 
+
         const headerRow = document.getElementById("tableHeaderRow");
         if (currentRole === "user") {
           document.getElementById("addRowBtn").style.display = "none";
           document.getElementById("saveBtn").style.display = "none";
-          if (headerRow.children.length === 7) {
+          if (headerRow.children.length === 5) {
             headerRow.removeChild(headerRow.lastElementChild);
           }
         } else {
           document.getElementById("addRowBtn").style.display = "inline-block";
           document.getElementById("saveBtn").style.display = "inline-block";
-          if (headerRow.children.length === 6) {
+          if (headerRow.children.length === 4) {
             const th = document.createElement("th");
             th.textContent = "Actions";
             headerRow.appendChild(th);
           }
         }
- 
-        // Start with empty table
+
         document.querySelector("#wsrTable tbody").innerHTML = "";
       } else {
         alert("Invalid username or password.");
       }
     }
- 
+
     function handleLogout() {
       currentRole = "";
       editingRow = null;
       document.getElementById("mainApp").style.display = "none";
       document.getElementById("loginForm").style.display = "block";
       document.querySelector("#wsrTable tbody").innerHTML = "";
- 
       document.getElementById("addRowBtn").style.display = "inline-block";
       document.getElementById("saveBtn").style.display = "inline-block";
- 
       const headerRow = document.getElementById("tableHeaderRow");
-      if (headerRow.children.length === 6) {
+      if (headerRow.children.length === 4) {
         const th = document.createElement("th");
         th.textContent = "Actions";
         headerRow.appendChild(th);
       }
- 
       document.getElementById("username").value = "";
       document.getElementById("password").value = "";
     }
- 
+
     function autoResize(textarea) {
       textarea.style.height = "auto";
       textarea.style.height = textarea.scrollHeight + "px";
     }
- 
-    function addRow(data = ["", "", "", "", "", ""]) {
+
+    // Util: format date yyyy-mm-dd to dd MMM yyyy
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "";
+      return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function addRow(data = [[], "", "", ""]) {
       const tbody = document.querySelector("#wsrTable tbody");
       const row = tbody.insertRow();
- 
-      const colsCount = currentRole === "admin" ? 7 : 6;
- 
+      const colsCount = currentRole === "admin" ? 5 : 4;
+
       for (let index = 0; index < colsCount; index++) {
         const cell = row.insertCell();
- 
+
         if (index === 0) {
-          // Year select
-          const select = document.createElement("select");
-          for (let year = 2025; year <= 2035; year++) {
-            const option = document.createElement("option");
-            option.value = year;
-            option.textContent = year;
-            if (data[0] == year.toString()) option.selected = true;
-            select.appendChild(option);
+          // Week Days: Multi-date picker
+          cell.style.textAlign = "center";
+          // Container for badges
+          const badgesDiv = document.createElement("div");
+          badgesDiv.className = "badges-container";
+          cell.appendChild(badgesDiv);
+
+          // Hidden input to store dates (array)
+          const hiddenInput = document.createElement("input");
+          hiddenInput.type = "hidden";
+          hiddenInput.value = JSON.stringify(data[0] || []);
+          cell.appendChild(hiddenInput);
+
+          // Date picker
+          const dateInput = document.createElement("input");
+          dateInput.type = "date";
+          dateInput.style.marginTop = "8px";
+          dateInput.style.display = "none";
+          cell.appendChild(dateInput);
+
+          // Add Date button
+          const addDateBtn = document.createElement("button");
+          addDateBtn.textContent = "Add Date";
+          addDateBtn.type = "button";
+          addDateBtn.className = "btn btn-outline-primary btn-sm";
+          addDateBtn.style.marginTop = "8px";
+          addDateBtn.onclick = function() {
+            dateInput.style.display = "inline-block";
+            dateInput.focus();
+          };
+          cell.appendChild(addDateBtn);
+
+          // Render badges
+          function renderBadges() {
+            badgesDiv.innerHTML = "";
+            const dates = JSON.parse(hiddenInput.value || "[]");
+            dates.forEach((d, i) => {
+              const badge = document.createElement("span");
+              badge.className = "date-badge";
+              badge.textContent = formatDate(d);
+              const remove = document.createElement("span");
+              remove.className = "remove";
+              remove.textContent = "×";
+              remove.title = "Remove";
+              remove.onclick = function () {
+                const arr = JSON.parse(hiddenInput.value || "[]");
+                arr.splice(i, 1);
+                hiddenInput.value = JSON.stringify(arr);
+                renderBadges();
+              };
+              badge.appendChild(remove);
+              badgesDiv.appendChild(badge);
+            });
           }
-          cell.appendChild(select);
-        } else if (index === 1) {
-          // Month select
-          const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-          const select = document.createElement("select");
-          months.forEach(month => {
-            const option = document.createElement("option");
-            option.value = month;
-            option.textContent = month;
-            if (data[1] === month) option.selected = true;
-            select.appendChild(option);
-          });
-          cell.appendChild(select);
-        } else if (index === 2) {
-          // Week Days input centered
-          const input = document.createElement("input");
-          input.type = "text";
-          input.value = data[2] || "";
-          input.style.textAlign = "center";
-          cell.appendChild(input);
-        } else if (index === 3 || index === 4 || index === 5) {
+          renderBadges();
+
+          dateInput.onchange = function() {
+            let arr = JSON.parse(hiddenInput.value || "[]");
+            if (arr.length >= 5) {
+              alert("You can select a maximum of 5 dates.");
+              dateInput.value = "";
+              dateInput.style.display = "none";
+              return;
+            }
+            if (arr.includes(dateInput.value)) {
+              alert("This date is already selected.");
+            } else if (dateInput.value) {
+              arr.push(dateInput.value);
+              hiddenInput.value = JSON.stringify(arr);
+              renderBadges();
+            }
+            dateInput.value = "";
+            dateInput.style.display = "none";
+          };
+
+        } else if (index === 1 || index === 2 || index === 3) {
           // Textareas for Etria, Solutions, Meeting Summary
           const textarea = document.createElement("textarea");
           textarea.value = data[index] || "";
-          textarea.oninput = function () {
-            autoResize(this);
-          };
+          textarea.oninput = function () { autoResize(this); };
           setTimeout(() => autoResize(textarea), 0);
           cell.appendChild(textarea);
-        } else if (index === 6 && currentRole === "admin") {
-          // Actions cell with Edit and Delete buttons centered
+        } else if (index === 4 && currentRole === "admin") {
+          // Actions cell with Edit and Delete buttons
           cell.classList.add("actions-cell");
- 
+
           const editBtn = document.createElement("button");
           editBtn.textContent = "Edit";
           editBtn.className = "btn btn-success btn-sm";
           editBtn.onclick = () => toggleEditRow(row, editBtn);
- 
+
           const delBtn = document.createElement("button");
           delBtn.textContent = "Delete";
           delBtn.className = "btn btn-danger btn-sm";
           delBtn.onclick = () => {
-            if (editingRow === row) editingRow = null; // reset editing if deleting editing row
+            if (editingRow === row) editingRow = null;
             row.remove();
-            mergeYearMonthCells();
           };
- 
+
           cell.appendChild(editBtn);
           cell.appendChild(delBtn);
         }
       }
-
       // Set this new row as the editing row
       editingRow = row;
-
-      // Enable inputs on the editing row, disable others
       disableAllInputs();
-
-      // After adding a row, remove any merged rowspan styling because we're editing
-      unmergeYearMonthCells();
     }
 
-    // Disable inputs for all rows except editingRow
     function disableAllInputs() {
       const rows = document.querySelectorAll("#wsrTable tbody tr");
       rows.forEach(row => {
@@ -338,52 +287,54 @@ href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" 
       });
     }
 
-    // Enable or disable all inputs/selects/textareas in a row
     function setInputsDisabled(row, disabled) {
-      const inputs = row.querySelectorAll("input, select, textarea");
+      const inputs = row.querySelectorAll("input, select, textarea, button");
       inputs.forEach(input => {
-        input.disabled = disabled;
-        // Also toggle pointer-events for styling to keep consistent
-        if (disabled) {
-          input.style.pointerEvents = "none";
-          input.style.backgroundColor = "transparent";
-          input.style.border = "none";
-        } else {
-          input.style.pointerEvents = "auto";
-          input.style.backgroundColor = "white";
-          input.style.border = "1px solid #ced4da";
-          input.style.borderRadius = "4px";
+        // Only disable input, textarea, select; keep the "Remove" span and badges clickable.
+        if (input.tagName === "INPUT" || input.tagName === "TEXTAREA" || input.tagName === "SELECT") {
+          input.disabled = disabled;
+          if (disabled) {
+            input.style.pointerEvents = "none";
+            input.style.backgroundColor = "transparent";
+            input.style.border = "none";
+          } else {
+            input.style.pointerEvents = "auto";
+            input.style.backgroundColor = "white";
+            input.style.border = "1px solid #ced4da";
+            input.style.borderRadius = "4px";
+          }
+        } else if (input.tagName === "BUTTON") {
+          // Only enable Add Date button and Edit/Delete if not disabled
+          input.disabled = disabled;
+          if (input.textContent === "Add Date") {
+            input.style.display = disabled ? "none" : "inline-block";
+          }
         }
       });
+      // Also hide/show the date input
+      const dateInput = row.querySelector('input[type="date"]');
+      if (dateInput) {
+        dateInput.style.display = disabled ? "none" : "none";
+      }
     }
 
-    // Toggle edit mode on a specific row when Edit button clicked
     function toggleEditRow(row, editBtn) {
       if (editingRow && editingRow !== row) {
-        // Disable previous editing row
         disableAllInputs();
         editingRow = null;
       }
 
-      if (editingRow === row) {
-        // Clicking edit again on same row does nothing
-        return;
-      } else {
-        // Start editing this row
+      if (editingRow === row) return;
+      else {
         editingRow = row;
         disableAllInputs();
-        // Keep button text always "Edit"
         editBtn.textContent = "Edit";
-
-        // When editing any row, unmerge Year and Month cells so selects are accessible
-        unmergeYearMonthCells();
       }
     }
- 
+
     function saveTable() {
       if (!confirm("Are you sure you want to save the changes?")) return;
 
-      // Stop editing first
       editingRow = null;
       disableAllInputs();
 
@@ -393,130 +344,30 @@ href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" 
       for (let i = 0; i < rows.length; i++) {
         let rowData = [];
         const cells = rows[i].cells;
-        for (let j = 0; j < cells.length; j++) {
-          if (j === 6 && currentRole === "admin") {
-            // Skip Actions column
-            continue;
-          }
-          const cell = cells[j];
-          let value = "";
-          if (j === 0 || j === 1) {
-            // Selects for Year and Month
-            const select = cell.querySelector("select");
-            value = select ? select.value : cell.textContent.trim();
-          } else if (j === 2) {
-            const input = cell.querySelector("input");
-            value = input ? input.value.trim() : cell.textContent.trim();
-          } else {
-            // Textareas for rest
-            const textarea = cell.querySelector("textarea");
-            value = textarea ? textarea.value.trim() : cell.textContent.trim();
-          }
-          rowData.push(value);
+        // Week Days column (multi-date)
+        const hiddenInput = cells[0].querySelector('input[type="hidden"]');
+        rowData.push(JSON.parse(hiddenInput.value || "[]"));
+        // Textareas
+        for (let j = 1; j <= 3; j++) {
+          const textarea = cells[j].querySelector("textarea");
+          rowData.push(textarea ? textarea.value.trim() : "");
         }
         dataToSave.push(rowData);
       }
-
-      // Save to localStorage
       localStorage.setItem("wsrData", JSON.stringify(dataToSave));
       alert("Data saved successfully.");
-
-      // After saving, merge Year and Month cells
-      mergeYearMonthCells();
     }
 
     function loadTable() {
       const data = localStorage.getItem("wsrData");
       if (!data) return;
-
       const rowsData = JSON.parse(data);
       rowsData.forEach(rowData => addRow(rowData));
-      mergeYearMonthCells();
       editingRow = null;
       disableAllInputs();
     }
 
-    // Remove all rowspan and show Year and Month cells before editing
-    function unmergeYearMonthCells() {
-      const tbody = document.querySelector("#wsrTable tbody");
-      if (!tbody) return;
-
-      Array.from(tbody.rows).forEach(row => {
-        const yearCell = row.cells[0];
-        const monthCell = row.cells[1];
-        yearCell.rowSpan = 1;
-        monthCell.rowSpan = 1;
-        yearCell.style.display = "";
-        monthCell.style.display = "";
-        yearCell.style.textAlign = "center";
-        monthCell.style.textAlign = "center";
-      });
-    }
-
-    // Merge cells for Year and Month when values are same for consecutive rows
-    function mergeYearMonthCells() {
-      const tbody = document.querySelector("#wsrTable tbody");
-      if (!tbody) return;
-
-      function getCellValue(cell) {
-        const select = cell.querySelector("select");
-        if (select) return select.value;
-        return cell.textContent.trim();
-      }
-
-      // Reset all first: rowspan 1 and visible + centered text
-      Array.from(tbody.rows).forEach(row => {
-        const yearCell = row.cells[0];
-        const monthCell = row.cells[1];
-        yearCell.rowSpan = 1;
-        monthCell.rowSpan = 1;
-        yearCell.style.display = "";
-        monthCell.style.display = "";
-        yearCell.style.textAlign = "center";
-        monthCell.style.textAlign = "center";
-      });
-
-      let startRow = 0;
-      while (startRow < tbody.rows.length) {
-        const startYear = getCellValue(tbody.rows[startRow].cells[0]);
-        const startMonth = getCellValue(tbody.rows[startRow].cells[1]);
-        let endRow = startRow + 1;
-
-        // Find all consecutive rows with same Year AND Month
-        while (
-          endRow < tbody.rows.length &&
-          getCellValue(tbody.rows[endRow].cells[0]) === startYear &&
-          getCellValue(tbody.rows[endRow].cells[1]) === startMonth
-        ) {
-          endRow++;
-        }
-
-        const spanCount = endRow - startRow;
-
-        if (spanCount > 1) {
-          // Merge Year cells
-          tbody.rows[startRow].cells[0].rowSpan = spanCount;
-          for (let r = startRow + 1; r < endRow; r++) {
-            tbody.rows[r].cells[0].style.display = "none";
-          }
-
-          // Merge Month cells
-          tbody.rows[startRow].cells[1].rowSpan = spanCount;
-          for (let r = startRow + 1; r < endRow; r++) {
-            tbody.rows[r].cells[1].style.display = "none";
-          }
-        }
-
-        startRow = endRow;
-      }
-    }
-
-
- 
-    // Load saved data on page load
-    window.onload = () => {
-      loadTable();
-    };
+    window.onload = () => { loadTable(); };
   </script>
 </body>
 </html>
