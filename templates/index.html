@@ -5,6 +5,8 @@
   <title>NW Team Weekly Status Report</title>
   <link rel="stylesheet" 
     href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+  <!-- Flatpickr CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <style>
     body { background: #f8f9fa; }
     #loginForm {
@@ -79,6 +81,9 @@
     <button class="btn custom-add-btn" id="addRowBtn" onclick="addRow()">Add Row</button>
     <button class="btn custom-save-btn" id="saveBtn" onclick="saveTable()">Save</button>
   </div>
+
+  <!-- Flatpickr JS -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script>
     let currentRole = "";
     let editingRow = null;
@@ -112,11 +117,47 @@
         }
 
         document.querySelector("#wsrTable tbody").innerHTML = "";
-        // Do NOT call loadTable(); on login -- table starts empty
+        // NEW: Load data from backend after login
+        loadDataFromBackend();
       } else {
         alert("Invalid username or password.");
       }
     }
+
+    async function loadDataFromBackend() {
+      try {
+        const response = await fetch('/data');
+        if (!response.ok) throw new Error('Failed to load data');
+        const data = await response.json();
+
+        const tbody = document.querySelector("#wsrTable tbody");
+        tbody.innerHTML = ""; // clear existing rows
+
+        data.forEach(row => {
+          // row is array like: [Week Days, Etria, Solutions, Meeting Summary]
+          // For your date range column, convert first column string to {start, end}
+          // Assuming Week Days stored as "YYYY-MM-DD to YYYY-MM-DD" or two dates
+          let start = "", end = "";
+          if (row[0]) {
+            const parts = row[0].split(" to ");
+            if(parts.length === 2) {
+              start = parts[0];
+              end = parts[1];
+            }
+          }
+          addRow([{start, end}, row[1], row[2], row[3]]);
+        });
+
+        if (currentRole === "user") {
+          // For user, disable editing completely
+          const rows = document.querySelectorAll("#wsrTable tbody tr");
+          rows.forEach(row => setInputsDisabled(row, true));
+        }
+      } catch (error) {
+        alert("Error loading data: " + error.message);
+      }
+    }
+
 
     function handleLogout() {
       currentRole = "";
@@ -150,8 +191,6 @@
       const endDate = new Date(end);
       if (isNaN(startDate) || isNaN(endDate)) return "";
       if (endDate < startDate) return "";
-
-      // Always show as DD-DD/MM/YYYY, using start and end dates
       return `${pad(startDate.getDate())}-${pad(endDate.getDate())}/${pad(startDate.getMonth() + 1)}/${startDate.getFullYear()}`;
     }
 
@@ -164,53 +203,59 @@
         const cell = row.insertCell();
 
         if (index === 0) {
-          // Single calendar: Start/End date range
+          // Single calendar: Date range picker using flatpickr
           cell.style.textAlign = "center";
-          const rangeContainer = document.createElement("div");
-          rangeContainer.className = "date-range-inputs";
+          const rangeInput = document.createElement("input");
+          rangeInput.type = "text";
+          rangeInput.className = "form-control mb-1";
+          rangeInput.style.maxWidth = "220px";
+          rangeInput.style.display = "inline-block";
+          rangeInput.readOnly = false; // so flatpickr can write
 
-          // Start Date
-          const startInput = document.createElement("input");
-          startInput.type = "date";
-          startInput.className = "form-control mb-1";
-          startInput.style.display = "inline-block";
-          startInput.style.width = "120px";
-          startInput.value = data[0]?.start || "";
-
-          // End Date
-          const endInput = document.createElement("input");
-          endInput.type = "date";
-          endInput.className = "form-control mb-1";
-          endInput.style.display = "inline-block";
-          endInput.style.width = "120px";
-          endInput.value = data[0]?.end || "";
-
-          // Don't load any row with preset data unless explicitly given (so default is empty)
+          // Hidden fields to store start/end for saving
+          const hiddenStart = document.createElement("input");
+          hiddenStart.type = "hidden";
+          const hiddenEnd = document.createElement("input");
+          hiddenEnd.type = "hidden";
 
           // Formatted output
           const rangeDiv = document.createElement("div");
           rangeDiv.className = "date-range-display";
-          rangeDiv.textContent = formatDateRange(startInput.value, endInput.value);
 
-          // Update display on change
-          function updateRange() {
-            // Enforce end >= start
-            if (startInput.value && endInput.value) {
-              if (endInput.value < startInput.value) {
-                rangeDiv.textContent = "End date must be after start date";
-                return;
-              }
-              rangeDiv.textContent = formatDateRange(startInput.value, endInput.value);
-            } else {
-              rangeDiv.textContent = "";
-            }
+          // flatpickr instance
+          let defaultDates = [];
+          if(data[0]?.start && data[0]?.end) {
+            defaultDates = [data[0].start, data[0].end];
+            rangeDiv.textContent = formatDateRange(data[0].start, data[0].end);
+            hiddenStart.value = data[0].start;
+            hiddenEnd.value = data[0].end;
           }
-          startInput.onchange = updateRange;
-          endInput.onchange = updateRange;
 
-          rangeContainer.appendChild(startInput);
-          rangeContainer.appendChild(endInput);
-          cell.appendChild(rangeContainer);
+          flatpickr(rangeInput, {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            defaultDate: defaultDates,
+            allowInput: true,
+            onChange: function(selectedDates) {
+              if (selectedDates.length === 2) {
+                const s = selectedDates[0];
+                const e = selectedDates[1];
+                const sStr = s.toISOString().slice(0,10);
+                const eStr = e.toISOString().slice(0,10);
+                hiddenStart.value = sStr;
+                hiddenEnd.value = eStr;
+                rangeDiv.textContent = formatDateRange(sStr, eStr);
+              } else {
+                hiddenStart.value = "";
+                hiddenEnd.value = "";
+                rangeDiv.textContent = "";
+              }
+            }
+          });
+
+          cell.appendChild(rangeInput);
+          cell.appendChild(hiddenStart);
+          cell.appendChild(hiddenEnd);
           cell.appendChild(rangeDiv);
         } else if (index === 1 || index === 2 || index === 3) {
           // Textareas for Etria, Solutions, Meeting Summary
@@ -274,7 +319,8 @@
             input.style.borderRadius = "4px";
           }
         } else if (input.tagName === "BUTTON") {
-          input.disabled = disabled;
+          const isInActionsCell = input.closest('td.actions-cell') !== null;
+          input.disabled = disabled && !isInActionsCell;
         }
       });
     }
@@ -306,9 +352,9 @@
         let rowData = [];
         const cells = rows[i].cells;
         // Week Days column (date range)
-        const startInput = cells[0].querySelector('input[type="date"]:first-of-type');
-        const endInput = cells[0].querySelector('input[type="date"]:last-of-type');
-        rowData.push({ start: startInput.value, end: endInput.value });
+        const hiddenStart = cells[0].querySelector('input[type="hidden"]:first-of-type');
+        const hiddenEnd = cells[0].querySelector('input[type="hidden"]:last-of-type');
+        rowData.push({ start: hiddenStart.value, end: hiddenEnd.value });
         // Textareas
         for (let j = 1; j <= 3; j++) {
           const textarea = cells[j].querySelector("textarea");
